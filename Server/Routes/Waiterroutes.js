@@ -100,6 +100,48 @@ router.get('/menu_items/:category', async (req, res) => {
     }
 });
 
+router.get('/orders/:tableId', async (req, res) => {
+    const { tableId } = req.params;
+    const orderId = null;
+    try {
+        query = ` SELECT oi.item_id, i.name, i.price, oi.quantity, o.total_amount
+        FROM orders AS o
+        JOIN order_items AS oi ON o.order_id = oi.order_id
+        JOIN menu_items AS i ON oi.item_id = i.item_id
+        WHERE o.table_id = ?`;
+        // Query the database to retrieve items for the specified table
+        await pool.query(query, [tableId], (err, items) => {
+            if (err){
+                return res.status(500).json({ message: 'Database error', error: err });
+            }
+            
+            let itemsArray = items.map(row => ({
+                item_id: row.item_id,
+                name: row.name,
+                price: row.price,
+                quantity: row.quantity
+            }));
+        
+            // Calculate total amount
+            let totalAmount = 0;
+            if (itemsArray.length > 0) {
+                totalAmount = items[0].total_amount;
+            }
+           
+            res.json({ itemsArray, totalAmount });
+    
+        });
+    
+
+    
+        // Send the items as a response
+        
+    } catch (error) {
+        console.error('Error fetching items:', error);
+        res.status(500).json({ error: 'Internal Server Error' });
+    }
+});
+
 router.post('/orders', (req, res) => {
     // Logic to create a new order
     res.send('Order created successfully');

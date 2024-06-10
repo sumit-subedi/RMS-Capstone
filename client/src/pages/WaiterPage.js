@@ -1,11 +1,14 @@
 import React, { useEffect, useState } from 'react';
 import axiosInstance from '../axiosInstance';
 import './styles.css';
+import { useNavigate } from 'react-router-dom';
 import Navbar from '../components/Navbar';
 
 const WaiterPage = () => {
     const [tables, setTables] = useState([]);
     const [error, setError] = useState('');
+
+    const navigate = useNavigate();
 
 
     useEffect(() => {
@@ -23,6 +26,10 @@ const WaiterPage = () => {
         fetchTables();
     }, []);
 
+    const handleTableClick = (tableId) => {
+        navigate(`/tables/${tableId}`);
+    };
+
     const getTableColor = (status) => {
         switch (status) {
             case 'available':
@@ -39,15 +46,15 @@ const WaiterPage = () => {
 
     return (
         <div className="container-fluid bg-dark text-light vh-100">
-                        <Navbar />
-
+            <Navbar />
             <div className="container mt-5">
                 <h2 className="text-center mb-4">Table Status</h2>
                 {error && <p className="text-danger text-center">{error}</p>}
                 <div className="row justify-content-center">
                     {tables.map(table => (
                         <div key={table.id} className="col-6 col-sm-4 col-md-3 col-lg-2 mb-4">
-                            <div className={`card table-card ${getTableColor(table.status)}`}>
+                            <div className={`card table-card ${getTableColor(table.status)}`}
+                                onClick={() => handleTableClick(table.id)}>
                                 <div className="card-body d-flex flex-column justify-content-center align-items-center">
                                     <h5 className="card-title">Table {table.table_number}</h5>
                                     <p className="card-text">Capacity: {table.capacity}</p>
@@ -60,5 +67,6 @@ const WaiterPage = () => {
         </div>
     );
 };
+
 
 export default WaiterPage;
