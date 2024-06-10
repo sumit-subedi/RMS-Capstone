@@ -1,4 +1,5 @@
 const express = require('express');
+const cors = require('cors');
 const app = express();
 
 // Import route handlers
@@ -12,6 +13,7 @@ const verifyToken = require('./Middleware/TokenVerification');
 const checkRole = require('./Middleware/RoleVerification');
 
 
+app.use(cors());
 app.use(express.json());
 
 
