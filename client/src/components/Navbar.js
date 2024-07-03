@@ -11,7 +11,7 @@ const Navbar = () => {
         localStorage.removeItem('token');
         
         // Redirect to home page
-        navigate('/');
+        navigate('/login');
 
     };
 

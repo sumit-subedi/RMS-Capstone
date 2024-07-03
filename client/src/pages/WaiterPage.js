@@ -16,7 +16,7 @@ const WaiterPage = () => {
         const fetchTables = async () => {
             try {
                 const response = await axiosInstance.get('/waiter/tables');
-                console.log(response);
+                console.log(response.data);
                 setTables(response.data);
             } catch (error) {
                 setError('Error fetching table data:', error);
@@ -49,7 +49,7 @@ const WaiterPage = () => {
             <Navbar />
             <div className="container mt-5">
                 <h2 className="text-center mb-4">Table Status</h2>
-                {error && <p className="text-danger text-center">{error}</p>}
+                {error && <p className="text-danger text-center" key={error}>{error}</p>}
                 <div className="row justify-content-center">
                     {tables.map(table => (
                         <div key={table.id} className="col-6 col-sm-4 col-md-3 col-lg-2 mb-4">
