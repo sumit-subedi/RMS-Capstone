@@ -20,18 +20,18 @@ const AdminNavbar = () => {
                     <Offcanvas.Body>
                         <ul className="nav flex-column">
                             <li className="nav-item">
-                                <Link className="nav-link active" aria-current="page" to="/">
+                                <Link className="nav-link active" aria-current="page" to="/admin">
                                     Dashboard
                                 </Link>
                             </li>
                             <li className="nav-item">
-                                <Link className="nav-link" to="/sales">
-                                    Sales
+                                <Link className="nav-link" to="/admin/menu-items">
+                                    Menu Items
                                 </Link>
                             </li>
                             <li className="nav-item">
-                                <Link className="nav-link" to="/inventory">
-                                    Inventory
+                                <Link className="nav-link" to="/admin/tables">
+                                    Tables
                                 </Link>
                             </li>
                             <li className="nav-item">
@@ -59,15 +59,15 @@ const AdminNavbar = () => {
                             </Link>
                         </li>
                         <li className="nav-item">
-                            <Link className="nav-link" to="/sales">
-                                Sales
-                            </Link>
-                        </li>
-                        <li className="nav-item">
-                            <Link className="nav-link" to="/inventory">
-                                Inventory
-                            </Link>
-                        </li>
+                                <Link className="nav-link" to="/admin/menu-items">
+                                    Menu Items
+                                </Link>
+                            </li>
+                            <li className="nav-item">
+                                <Link className="nav-link" to="/admin/tables">
+                                    Tables
+                                </Link>
+                            </li>
                         <li className="nav-item">
                             <Link className="nav-link" to="/orders">
                                 Orders

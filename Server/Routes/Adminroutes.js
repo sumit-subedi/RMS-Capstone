@@ -189,4 +189,113 @@ router.delete('/menu-items/:id', async (req, res) => {
 // CRUD Operation on Menu items End
 
 
+// *************CRUD Operation on table - START*********************
+
+// Get all tables
+router.get('/tables', async (req, res) => {
+    try {
+        const query = 'SELECT * FROM tables';
+        const results = await new Promise((resolve, reject) => {
+            pool.query(query, (err, results) => {
+                if (err) reject(err);
+                else resolve(results);
+            });
+        });
+        res.json(results);
+    } catch (error) {
+        console.error('Error fetching tables:', error);
+        res.status(500).json({ error: 'Internal Server Error' });
+    }
+});
+
+// Get a table by ID
+router.get('/tables/:id', async (req, res) => {
+    const { id } = req.params;
+    try {
+        const query = 'SELECT * FROM tables WHERE table_id = ?';
+        const results = await new Promise((resolve, reject) => {
+            pool.query(query, [id], (err, results) => {
+                if (err) reject(err);
+                else resolve(results);
+            });
+        });
+        if (results.length === 0) {
+            return res.status(404).json({ error: 'Table not found' });
+        }
+        res.json(results[0]);
+    } catch (error) {
+        console.error('Error fetching table:', error);
+        res.status(500).json({ error: 'Internal Server Error' });
+    }
+});
+
+// Add a new table
+router.post('/tables', async (req, res) => {
+    const { table_identifier, seats } = req.body;
+    try {
+        const query = 'INSERT INTO tables (table_identifier, seats) VALUES (?, ?)';
+        const result = await new Promise((resolve, reject) => {
+            pool.query(query, [table_identifier, seats], (err, result) => {
+                if (err) reject(err);
+                else resolve(result);
+            });
+        });
+
+        const newTableId = result.insertId;
+        res.status(201).json({ table_id: newTableId, table_identifier, seats });
+    } catch (error) {
+        console.error('Error adding table:', error);
+        res.status(500).json({ error: 'Internal Server Error' });
+    }
+});
+
+// Update a table
+router.put('/tables/:id', async (req, res) => {
+    const { id } = req.params;
+    const { table_identifier, seats, status } = req.body;
+    try {
+        const query = 'UPDATE tables SET table_identifier = ?, seats = ?, status = ? WHERE table_id = ?';
+        const result = await new Promise((resolve, reject) => {
+            pool.query(query, [table_identifier, seats, status, id], (err, result) => {
+                if (err) reject(err);
+                else resolve(result);
+            });
+        });
+
+        if (result.affectedRows === 0) {
+            return res.status(404).json({ error: 'Table not found' });
+        }
+        res.json({ table_id: id, table_identifier, seats, status });
+    } catch (error) {
+        console.error('Error updating table:', error);
+        res.status(500).json({ error: 'Internal Server Error' });
+    }
+});
+
+// Delete a table
+router.delete('/tables/:id', async (req, res) => {
+    const { id } = req.params;
+    try {
+        const query = 'DELETE FROM tables WHERE table_id = ?';
+        const result = await new Promise((resolve, reject) => {
+            pool.query(query, [id], (err, result) => {
+                if (err) reject(err);
+                else resolve(result);
+            });
+        });
+
+        if (result.affectedRows === 0) {
+            return res.status(404).json({ error: 'Table not found' });
+        }
+        res.json({ message: 'Table deleted successfully' });
+    } catch (error) {
+        console.error('Error deleting table:', error);
+        res.status(500).json({ error: 'Internal Server Error' });
+    }
+});
+
+
+// *************CRUD Operation on table - START*********************
+
+
 module.exports = router;

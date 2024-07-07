@@ -31,7 +31,7 @@ const App = () => {
         <Router>
             <Routes>
                 <Route path="/login" element={<LoginPage setToken={setToken} setRole={setRole} />} />
-                <Route path="/admin" element={<AdminPage />} />
+                <Route path="/admin/*" element={<AdminPage />} />
                 <Route path="/reception" element={<ReceptionistPage />} />
                 <Route path="/waiter" element={<WaiterPage />} />
                 <Route path="/" element={renderPageBasedOnRole()} />

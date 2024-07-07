@@ -56,7 +56,7 @@ const WaiterPage = () => {
                             <div className={`card table-card ${getTableColor(table.status)}`}
                                 onClick={() => handleTableClick(table.id)}>
                                 <div className="card-body d-flex flex-column justify-content-center align-items-center">
-                                    <h5 className="card-title">Table {table.table_number}</h5>
+                                    <h5 className="card-title"> {table.table_number}</h5>
                                     <p className="card-text">Capacity: {table.capacity}</p>
                                 </div>
                             </div>

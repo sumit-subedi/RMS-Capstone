@@ -25,8 +25,8 @@ router.get('/tables', async (req, res) => {
 
         const tables = results.map(table => ({
             id: table.table_id,
-            table_number: table.table_number,
-            capacity: table.capacity,
+            table_number: table.table_identifier,
+            capacity: table.seats,
             status: table.status 
         }));
 
