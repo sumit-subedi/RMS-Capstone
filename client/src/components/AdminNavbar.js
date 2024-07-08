@@ -35,11 +35,15 @@ const AdminNavbar = () => {
                                 </Link>
                             </li>
                             <li className="nav-item">
-                                <Link className="nav-link" to="/orders">
-                                    Orders
-                                </Link>
-                            </li>
-                            {/* Add more links as needed */}
+                        <Link to="/admin/users" className="nav-link">
+                            Users
+                        </Link>
+                    </li>
+                    <li className="nav-item">
+                        <Link to="/admin/orders" className="nav-link">
+                            Orders
+                        </Link>
+                    </li>
                         </ul>
                     </Offcanvas.Body>
                 </Navbar.Offcanvas>
@@ -68,12 +72,16 @@ const AdminNavbar = () => {
                                     Tables
                                 </Link>
                             </li>
-                        <li className="nav-item">
-                            <Link className="nav-link" to="/orders">
-                                Orders
-                            </Link>
-                        </li>
-                        {/* Add more links as needed */}
+                            <li className="nav-item">
+                        <Link to="/admin/users" className="nav-link">
+                            Users
+                        </Link>
+                    </li>
+                    <li className="nav-item">
+                        <Link to="/admin/orders" className="nav-link">
+                            Orders
+                        </Link>
+                    </li>
                     </ul>
                 </div>
             </nav>

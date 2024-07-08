@@ -1,6 +1,8 @@
 const express = require('express');
 const router = express.Router();
 const pool = require('../db');
+const bcrypt = require('bcrypt');
+
 
 // Define routes
 router.get('/dashboard', async (req, res) => {
@@ -296,6 +298,206 @@ router.delete('/tables/:id', async (req, res) => {
 
 
 // *************CRUD Operation on table - START*********************
+
+
+// ********************* User Management endpoints - START ********************//
+// Get all users
+router.get('/users', async (req, res) => {
+    try {
+        const query = 'SELECT user_id, username, email, full_name, role, is_active FROM users';
+        const results = await new Promise((resolve, reject) => {
+            pool.query(query, (err, results) => {
+                if (err) reject(err);
+                else resolve(results);
+            });
+        });
+        res.json(results);
+    } catch (error) {
+        console.error('Error fetching users:', error);
+        res.status(500).json({ error: 'Internal Server Error' });
+    }
+});
+
+// Get a user by ID
+router.get('/users/:id', async (req, res) => {
+    const { id } = req.params;
+    try {
+        const query = 'SELECT user_id, username, email, full_name, role, is_active FROM users WHERE user_id = ?';
+        const results = await new Promise((resolve, reject) => {
+            pool.query(query, [id], (err, results) => {
+                if (err) reject(err);
+                else resolve(results);
+            });
+        });
+        if (results.length === 0) {
+            return res.status(404).json({ error: 'User not found' });
+        }
+        res.json(results[0]);
+    } catch (error) {
+        console.error('Error fetching user:', error);
+        res.status(500).json({ error: 'Internal Server Error' });
+    }
+});
+
+// Add a new user
+router.post('/users', async (req, res) => {
+    console.log(req.body);
+    const { username, password, email, full_name, role } = req.body;
+    try {
+        if (role === 'admin') {
+            return res.status(403).json({ error: 'Cannot add admin users' });
+        }
+
+        const hashedPassword = await bcrypt.hash(password, 10);
+        const query = 'INSERT INTO users (username, password, email, full_name, role) VALUES (?, ?, ?, ?, ?)';
+        const result = await new Promise((resolve, reject) => {
+            pool.query(query, [username, hashedPassword, email, full_name, role], (err, result) => {
+                if (err) reject(err);
+                else resolve(result);
+            });
+        });
+
+        const newUserId = result.insertId;
+        res.status(201).json({ user_id: newUserId, username, email, full_name, role });
+    } catch (error) {
+        console.error('Error adding user:', error);
+        res.status(500).json({ error: 'Internal Server Error' });
+    }
+});
+
+// Update a user
+router.put('/users/:id', async (req, res) => {
+    const { id } = req.params;
+    const { username, email, full_name, role, is_active, password } = req.body;
+    try {
+        const userQuery = 'SELECT * FROM users WHERE user_id = ?';
+        const user = await new Promise((resolve, reject) => {
+            pool.query(userQuery, [id], (err, results) => {
+                if (err) reject(err);
+                else resolve(results[0]);
+            });
+        });
+
+        if (!user) {
+            return res.status(404).json({ error: 'User not found' });
+        }
+
+        if (user.role === 'admin') {
+            return res.status(403).json({ error: 'Cannot modify admin users' });
+        }
+
+        let updateQuery, queryParams;
+
+        if (password) {
+            if (password.length < 6) {
+                return res.status(400).json({ error: 'Password must be at least 6 characters long' });
+            }
+            const hashedPassword = await bcrypt.hash(password, 10);
+            updateQuery = 'UPDATE users SET username = ?, email = ?, full_name = ?, role = ?, is_active = ?, password = ? WHERE user_id = ?';
+            queryParams = [username, email, full_name, role, is_active, hashedPassword, id];
+        } else {
+            updateQuery = 'UPDATE users SET username = ?, email = ?, full_name = ?, role = ?, is_active = ? WHERE user_id = ?';
+            queryParams = [username, email, full_name, role, is_active, id];
+        }
+
+        const result = await new Promise((resolve, reject) => {
+            pool.query(updateQuery, queryParams, (err, result) => {
+                if (err) reject(err);
+                else resolve(result);
+            });
+        });
+
+        if (result.affectedRows === 0) {
+            return res.status(404).json({ error: 'User not found' });
+        }
+        res.json({ user_id: id, username, email, full_name, role, is_active });
+    } catch (error) {
+        console.error('Error updating user:', error);
+        res.status(500).json({ error: 'Internal Server Error' });
+    }
+});
+
+
+// Delete a user
+router.delete('/users/:id', async (req, res) => {
+    const { id } = req.params;
+    try {
+        const userQuery = 'SELECT * FROM users WHERE user_id = ?';
+        const user = await new Promise((resolve, reject) => {
+            pool.query(userQuery, [id], (err, results) => {
+                if (err) reject(err);
+                else resolve(results[0]);
+            });
+        });
+
+        if (!user) {
+            return res.status(404).json({ error: 'User not found' });
+        }
+
+        if (user.role === 'admin') {
+            return res.status(403).json({ error: 'Cannot delete admin users' });
+        }
+
+        const deactivateQuery = 'UPDATE users SET is_active = 0 WHERE user_id = ?';
+        const result = await new Promise((resolve, reject) => {
+            pool.query(deactivateQuery, [id], (err, result) => {
+                if (err) reject(err);
+                else resolve(result);
+            });
+        });
+
+        if (result.affectedRows === 0) {
+            return res.status(404).json({ error: 'User not found' });
+        }
+        res.json({ message: 'User deactivated successfully' });
+    } catch (error) {
+        console.error('Error deleting user:', error);
+        res.status(500).json({ error: 'Internal Server Error' });
+    }
+});
+
+// ***************************** User Management EndPoint - END ************************
+
+// GET all orders with optional filters
+router.get('/orders', async (req, res) => {
+    try {
+        const {
+            startDate,
+            endDate,
+            status,
+            userName,
+            minAmount,
+            maxAmount,
+            tableIdentifier,
+            orderId
+        } = req.query;
+        console.log(req.query);
+        let query = 'SELECT * FROM orders WHERE 1';
+
+        // Apply filters based on query parameters
+        if (startDate) query += ` AND DATE(created_at) >= '${startDate}'`;
+        if (endDate) query += ` AND DATE(created_at) <= '${endDate}'`;
+        if (status) query += ` AND status LIKE '%${status}%'`; 
+        if (userName) query += ` AND user_name LIKE '%${userName}%'`; 
+        if (minAmount) query += ` AND total_amount >= ${minAmount}`;
+        if (maxAmount) query += ` AND total_amount <= ${maxAmount}`;
+        if (tableIdentifier) query += ` AND table_identifier LIKE '%${tableIdentifier}%'`; 
+        if (orderId) query += ` AND order_id = ${orderId}`;
+
+        const orders = await new Promise((resolve, reject) => {
+            pool.query(query, (err, result) => {
+                if (err) reject(err);
+                else resolve(result);
+            });
+        });
+        res.json(orders);
+
+    } catch (error) {
+        console.error('Error fetching orders:', error);
+        res.status(500).json({ error: 'Internal Server Error' });
+    }
+});
+
 
 
 module.exports = router;

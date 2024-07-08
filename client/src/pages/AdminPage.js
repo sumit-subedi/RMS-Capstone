@@ -6,6 +6,9 @@ import MenuList from '../components/Admin/MenuList';
 import MenuItemForm from '../components/Admin/MenuItemForm';
 import TableList from '../components/Admin/TableList';
 import TableForm from '../components/Admin/TableForm';
+import UserList from '../components/Admin/UserList';
+import UserForm from '../components/Admin/UserForm';
+import AdminOrders from '../components/Admin/Orders';
 
 const AdminPage = () => {
     return (
@@ -21,6 +24,10 @@ const AdminPage = () => {
                         <Route path="/tables" element={<TableList />} />
                         <Route path="/tables/new" element={<TableForm />} />
                         <Route path="/tables/:id/edit" element={<TableForm />} />
+                        <Route path="/users" element={<UserList />} />
+                        <Route path="/users/new" element={<UserForm />} />
+                        <Route path="/users/:id/edit" element={<UserForm />} />
+                        <Route path="/orders" element={<AdminOrders />} />
                     </Routes>
                 </main>
             </div>
