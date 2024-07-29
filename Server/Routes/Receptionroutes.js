@@ -18,6 +18,7 @@ router.get('/occupied_tables', async (req, res) => {
                     ...table,
                     orders
                 };
+                
             }));
 
             res.json(tablesWithOrders);
@@ -45,7 +46,8 @@ const getOrderDetailsByTableId = (tableId) => {
 
             const orders = {};
             results.forEach(row => {
-                const { active_order_id, status, item_name, quantity, price } = row;
+                console.log(row);
+                const { active_order_id, status, quantity, name, price } = row;
                 if (!orders[active_order_id]) {
                     orders[active_order_id] = {
                         active_order_id,
@@ -53,7 +55,7 @@ const getOrderDetailsByTableId = (tableId) => {
                         items: []
                     };
                 }
-                orders[active_order_id].items.push({ item_name, quantity, price });
+                orders[active_order_id].items.push({ name, quantity, price });
             });
 
             resolve(Object.values(orders));

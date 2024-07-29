@@ -498,6 +498,39 @@ router.get('/orders', async (req, res) => {
     }
 });
 
+router.get('/order/:id', async (req, res) => {
+    const orderId = req.params.id;
+    console.log(orderId);
+    try {
+        // Query to get order details
+        const orderQuery = 'SELECT * FROM orders WHERE order_id = ?';
+        const order = await new Promise((resolve, reject) => {
+            pool.query(orderQuery, [orderId], (err, results) => {
+                if (err) reject(err);
+                else resolve(results[0]);
+            });
+        });
+
+        if (!order) {
+            return res.status(404).json({ error: 'Order not found' });
+        }
+
+        // Query to get order items
+        const itemsQuery = 'SELECT * FROM order_items WHERE order_id = ?';
+        const items = await new Promise((resolve, reject) => {
+            pool.query(itemsQuery, [orderId], (err, results) => {
+                if (err) reject(err);
+                else resolve(results);
+            });
+        });
+
+        res.json({ order, items });
+    } catch (error) {
+        console.error('Error fetching order details:', error);
+        res.status(500).json({ error: 'Internal Server Error' });
+    }
+});
+
 
 
 module.exports = router;
