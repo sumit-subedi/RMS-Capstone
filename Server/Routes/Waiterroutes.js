@@ -59,7 +59,7 @@ router.get('/menu_items', async (req, res) => {
     }
 });
 
-// POST /waiter/orders/:tableId/items
+// POST /waiter/orders/:tableId/items Add item to the order
 router.post('/orders/:tableId/items', async (req, res) => {
     const { tableId } = req.params;
     const { itemId, quantity } = req.body;
@@ -147,10 +147,10 @@ async function getOrCreateActiveOrder(tableId) {
                 else resolve(results);
             });
         });
-
         if (rows && rows.length > 0) {
             return rows[0].active_order_id;
         } else {
+            console.log("here else");
             const query = 'INSERT INTO active_orders (table_id, status) VALUES (?, "in_progress")';
             const rows = await new Promise((resolve, reject) => {
                 pool.query(query, [tableId], (err, results) => {

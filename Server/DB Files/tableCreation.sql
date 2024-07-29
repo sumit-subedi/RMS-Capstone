@@ -53,25 +53,28 @@ CREATE TABLE active_order_items (
     quantity INT NOT NULL,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-    FOREIGN KEY (active_order_id) REFERENCES active_orders(active_order_id),
+    FOREIGN KEY (active_order_id) REFERENCES active_orders(active_order_id) ON DELETE CASCADE,
     FOREIGN KEY (item_id) REFERENCES menu_items(item_id)
 );
 
 -- Orders Table (for finalized orders)
 CREATE TABLE orders (
     order_id INT AUTO_INCREMENT PRIMARY KEY,
-    user_name VARCHAR(255) NOT NULL, -- Replace user_id with user_name
-    table_identifier VARCHAR(255) NOT NULL, -- Replace table_id with table_identifier
+    user_name VARCHAR(255) NOT NULL, 
+    table_identifier VARCHAR(255) NOT NULL,
     status ENUM('completed', 'cancelled') NOT NULL,
     total_amount DECIMAL(10, 2) NOT NULL,
+    discount DECIMAL(10, 2) DEFAULT 0,
+    tax DECIMAL(10, 2) DEFAULT 0,
+    grand_total DECIMAL(10, 2) DEFAULT 0;
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     completed_at TIMESTAMP
 );
 
 CREATE TABLE order_items (
     order_item_id INT AUTO_INCREMENT PRIMARY KEY,
-    order_id INT, -- Keep order_id to link items to orders
-    item_name VARCHAR(255) NOT NULL, -- Replace item_id with item_name
+    order_id INT, 
+    item_name VARCHAR(255) NOT NULL,
     quantity INT NOT NULL,
     price_at_order DECIMAL(10, 2) NOT NULL,
     FOREIGN KEY (order_id) REFERENCES orders(order_id)
