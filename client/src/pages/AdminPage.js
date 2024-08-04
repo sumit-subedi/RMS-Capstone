@@ -9,6 +9,7 @@ import TableForm from '../components/Admin/TableForm';
 import UserList from '../components/Admin/UserList';
 import UserForm from '../components/Admin/UserForm';
 import AdminOrders from '../components/Admin/Orders';
+import OrderDetails from '../components/Admin/OrderDetails';
 
 const AdminPage = () => {
     return (
@@ -28,6 +29,7 @@ const AdminPage = () => {
                         <Route path="/users/new" element={<UserForm />} />
                         <Route path="/users/:id/edit" element={<UserForm />} />
                         <Route path="/orders" element={<AdminOrders />} />
+                        <Route path="/order/:id" element={<OrderDetails />} />
                     </Routes>
                 </main>
             </div>

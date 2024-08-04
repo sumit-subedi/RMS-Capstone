@@ -1,6 +1,6 @@
 .table-card {
     height: 0;
-    padding-bottom: 100%; /* This maintains the square aspect ratio */
+    padding-bottom: 100%; 
     position: relative;
     overflow: hidden;
     transition: transform 0.3s ease, box-shadow 0.3s ease;
@@ -34,4 +34,61 @@
 
 .card-text {
     font-size: 1rem;
+}
+
+
+/* styles.css */
+
+
+.receptionist .card {
+    border-radius: 15px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+    cursor: pointer;
+    transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.receptionist .card:hover {
+    transform: scale(1.05);
+    box-shadow: 0 8px 16px rgba(0, 0, 0, 0.3);
+}
+
+.receptionist .table-card {
+    position: relative;
+}
+
+.receptionist .hover-bubble {
+    position: absolute;
+    top: 20%;
+    left: 80%;
+    transform: translateX(-50%);
+    background-color: white;
+    color: black;
+    border-radius: 10px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+    padding: 10px;
+    width: 250px;
+    z-index: 10;
+    transition: opacity 0.2s ease-in-out;
+}
+
+.receptionist .table-card:hover .hover-bubble {
+    opacity: 1;
+    visibility: visible;
+}
+
+.receptionist .card-body {
+    text-align: center;
+}
+
+.receptionist h2 {
+    font-weight: 700;
+    font-size: 2rem;
+}
+
+.receptionist .text-dark {
+    color: #343a40 !important;
+}
+
+.receptionist .text-light {
+    color: #f8f9fa !important;
 }

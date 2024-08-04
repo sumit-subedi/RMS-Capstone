@@ -11,3 +11,18 @@ code {
   font-family: source-code-pro, Menlo, Monaco, Consolas, 'Courier New',
     monospace;
 }
+
+.table-card {
+  cursor: pointer;
+  transition: transform 0.2s ease-in-out;
+}
+
+.table-card:hover {
+  transform: translateY(-5px);
+}
+
+
+
+.table-card:hover .card-footer {
+  display: block;
+}

@@ -6,6 +6,7 @@ import ReceptionistPage from './pages/ReceptionistPage';
 import WaiterPage from './pages/WaiterPage';
 import TableDetailsPage from './components/Waiter/TableDetailsPage';
 import MenuPage from './components/Waiter/MenuPage';
+import BillingPage from './components/Receptionist/BillingPage';
 
 const App = () => {
     const [token, setToken] = useState(localStorage.getItem('token'));
@@ -38,6 +39,8 @@ const App = () => {
                 <Route path="/" element={renderPageBasedOnRole()} />
                 <Route path="/tables/:tableId" element={<TableDetailsPage />} />
                 <Route path="/waiter/menu" element={<MenuPage />} />
+                <Route path="reception/billing/:tableId" element={<BillingPage />} />
+
             </Routes>
         </Router>
     );

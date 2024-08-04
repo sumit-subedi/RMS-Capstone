@@ -1,5 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import axiosInstance from '../../axiosInstance';
+import { Link } from 'react-router-dom';
+
 
 const AdminOrders = () => {
     const [orders, setOrders] = useState([]);
@@ -146,6 +148,9 @@ const AdminOrders = () => {
                                 <td>{order.status}</td>
                                 <td>${order.total_amount}</td>
                                 <td>{order.table_identifier}</td>
+                                <td>
+                                    <Link to={`/admin/order/${order.order_id}`} className="btn btn-info btn-sm">View Details</Link>
+                                </td>
                                 {/* Display timestamps or additional details */}
                             </tr>
                         ))}
