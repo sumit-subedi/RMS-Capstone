@@ -28,12 +28,8 @@ router.get('/dashboard', async (req, res) => {
 // Helper functions to fetch data
 async function getTodaySales() {
     const query = `SELECT SUM(total_amount) AS todaySales FROM orders WHERE DATE(created_at) = CURDATE()`;
-    const results = await new Promise((resolve, reject) => {
-        pool.query(query, (err, results) => {
-            if (err) reject(err);
-            else resolve(results[0]);
-        });
-    });
+    const [results] = await pool.promise().query(query);
+
     return results.todaySales || 0;
 }
 
@@ -42,12 +38,8 @@ async function getSaleTrend() {
                    FROM orders 
                    WHERE created_at >= DATE_SUB(NOW(), INTERVAL 1 MONTH) 
                    GROUP BY DATE(created_at)`;
-    const results = await new Promise((resolve, reject) => {
-        pool.query(query, (err, results) => {
-            if (err) reject(err);
-            else resolve(results);
-        });
-    });
+    const [results] = await pool.promise().query(query);
+
     return results;
 }
 
@@ -57,23 +49,15 @@ async function getPopularItems() {
                    GROUP BY item_name 
                    ORDER BY totalQuantity DESC 
                    LIMIT 5`;
-    const results = await new Promise((resolve, reject) => {
-        pool.query(query, (err, results) => {
-            if (err) reject(err);
-            else resolve(results);
-        });
-    });
+    const [results] = await pool.promise().query(query);
+
     return results;
 }
 
 async function getOngoingOrders() {
     const query = `SELECT * FROM orders WHERE status = 'ongoing'`;
-    const results = await new Promise((resolve, reject) => {
-        pool.query(query, (err, results) => {
-            if (err) reject(err);
-            else resolve(results);
-        });
-    });
+    const [results] = await pool.promise().query(query);
+
     return results;
 }
 
@@ -85,12 +69,8 @@ async function getOngoingOrders() {
 router.get('/menu-items', async (req, res) => {
     try {
         const query = `SELECT * FROM menu_items`;
-    const results = await new Promise((resolve, reject) => {
-        pool.query(query, (err, results) => {
-            if (err) reject(err);
-            else resolve(results);
-        });
-    });
+        const [results] = await pool.promise().query(query);
+
         res.json(results);
     } catch (error) {
         console.error('Error fetching menu items:', error);
@@ -103,12 +83,8 @@ router.get('/menu-items/:id', async (req, res) => {
     const { id } = req.params;
     try {
         const query = 'SELECT * FROM menu_items WHERE item_id = ?';
-        const results = await new Promise((resolve, reject) => {
-            pool.query(query, [id], (err, results) => {
-                if (err) reject(err);
-                else resolve(results);
-            });
-        });
+        const [results] = await pool.promise().query(query, [id]);
+
         console.log(results);
         if (results.length === 0) {
             return res.status(404).json({ error: 'Menu item not found' });
@@ -125,12 +101,8 @@ router.post('/menu-items', async (req, res) => {
     const { name, description, price, category } = req.body;
     try {
         const query = 'INSERT INTO menu_items (name, description, price, category) VALUES (?, ?, ?, ?)';
-        const result = await new Promise((resolve, reject) => {
-            pool.query(query, [name, description, price, category], (err, result) => {
-                if (err) reject(err);
-                else resolve(result);
-            });
-        });
+        const [result] = await pool.promise().query(query, [name, description, price, category]);
+
 
         const newItemId = result.insertId;
         res.status(201).json({ item_id: newItemId, name, description, price, category });
@@ -147,12 +119,8 @@ router.put('/menu-items/:id', async (req, res) => {
     const { name, description, price, category } = req.body;
     try {
         const query = 'UPDATE menu_items SET name = ?, description = ?, price = ?, category = ? WHERE item_id = ?';
-        const result = await new Promise((resolve, reject) => {
-            pool.query(query, [name, description, price, category, id], (err, result) => {
-                if (err) reject(err);
-                else resolve(result);
-            });
-        });
+        const [result] = await pool.promise().query(query, [name, description, price, category, id]);
+
 
         if (result.affectedRows === 0) {
             return res.status(404).json({ error: 'Menu item not found' });
@@ -170,12 +138,8 @@ router.delete('/menu-items/:id', async (req, res) => {
     const { id } = req.params;
     try {
         const query = 'DELETE FROM menu_items WHERE item_id = ?';
-        const result = await new Promise((resolve, reject) => {
-            pool.query(query, [id], (err, result) => {
-                if (err) reject(err);
-                else resolve(result);
-            });
-        });
+        const [result] = await pool.promise().query(query, [id]);
+
 
         if (result.affectedRows === 0) {
             return res.status(404).json({ error: 'Menu item not found' });
@@ -197,12 +161,8 @@ router.delete('/menu-items/:id', async (req, res) => {
 router.get('/tables', async (req, res) => {
     try {
         const query = 'SELECT * FROM tables';
-        const results = await new Promise((resolve, reject) => {
-            pool.query(query, (err, results) => {
-                if (err) reject(err);
-                else resolve(results);
-            });
-        });
+        const [results] = await pool.promise().query(query);
+
         res.json(results);
     } catch (error) {
         console.error('Error fetching tables:', error);
@@ -215,12 +175,8 @@ router.get('/tables/:id', async (req, res) => {
     const { id } = req.params;
     try {
         const query = 'SELECT * FROM tables WHERE table_id = ?';
-        const results = await new Promise((resolve, reject) => {
-            pool.query(query, [id], (err, results) => {
-                if (err) reject(err);
-                else resolve(results);
-            });
-        });
+        const [results] = await pool.promise().query(query, [id]);
+
         if (results.length === 0) {
             return res.status(404).json({ error: 'Table not found' });
         }
@@ -236,12 +192,8 @@ router.post('/tables', async (req, res) => {
     const { table_identifier, seats } = req.body;
     try {
         const query = 'INSERT INTO tables (table_identifier, seats) VALUES (?, ?)';
-        const result = await new Promise((resolve, reject) => {
-            pool.query(query, [table_identifier, seats], (err, result) => {
-                if (err) reject(err);
-                else resolve(result);
-            });
-        });
+        const [result] = await pool.promise().query(query, [table_identifier, seats]);
+
 
         const newTableId = result.insertId;
         res.status(201).json({ table_id: newTableId, table_identifier, seats });
@@ -257,12 +209,8 @@ router.put('/tables/:id', async (req, res) => {
     const { table_identifier, seats, status } = req.body;
     try {
         const query = 'UPDATE tables SET table_identifier = ?, seats = ?, status = ? WHERE table_id = ?';
-        const result = await new Promise((resolve, reject) => {
-            pool.query(query, [table_identifier, seats, status, id], (err, result) => {
-                if (err) reject(err);
-                else resolve(result);
-            });
-        });
+        const [result] = await pool.promise().query(query, [table_identifier, seats, status, id]);
+
 
         if (result.affectedRows === 0) {
             return res.status(404).json({ error: 'Table not found' });
@@ -279,12 +227,8 @@ router.delete('/tables/:id', async (req, res) => {
     const { id } = req.params;
     try {
         const query = 'DELETE FROM tables WHERE table_id = ?';
-        const result = await new Promise((resolve, reject) => {
-            pool.query(query, [id], (err, result) => {
-                if (err) reject(err);
-                else resolve(result);
-            });
-        });
+        const [result] = await pool.promise().query(query, [id]);
+
 
         if (result.affectedRows === 0) {
             return res.status(404).json({ error: 'Table not found' });
@@ -305,12 +249,8 @@ router.delete('/tables/:id', async (req, res) => {
 router.get('/users', async (req, res) => {
     try {
         const query = 'SELECT user_id, username, email, full_name, role, is_active FROM users';
-        const results = await new Promise((resolve, reject) => {
-            pool.query(query, (err, results) => {
-                if (err) reject(err);
-                else resolve(results);
-            });
-        });
+        const [results] = await pool.promise().query(query);
+
         res.json(results);
     } catch (error) {
         console.error('Error fetching users:', error);
@@ -323,12 +263,8 @@ router.get('/users/:id', async (req, res) => {
     const { id } = req.params;
     try {
         const query = 'SELECT user_id, username, email, full_name, role, is_active FROM users WHERE user_id = ?';
-        const results = await new Promise((resolve, reject) => {
-            pool.query(query, [id], (err, results) => {
-                if (err) reject(err);
-                else resolve(results);
-            });
-        });
+        const [results] = await pool.promise().query(query, [id]);
+
         if (results.length === 0) {
             return res.status(404).json({ error: 'User not found' });
         }
@@ -350,12 +286,8 @@ router.post('/users', async (req, res) => {
 
         const hashedPassword = await bcrypt.hash(password, 10);
         const query = 'INSERT INTO users (username, password, email, full_name, role) VALUES (?, ?, ?, ?, ?)';
-        const result = await new Promise((resolve, reject) => {
-            pool.query(query, [username, hashedPassword, email, full_name, role], (err, result) => {
-                if (err) reject(err);
-                else resolve(result);
-            });
-        });
+        const [result] = await pool.promise().query(query, [username, hashedPassword, email, full_name, role]);
+
 
         const newUserId = result.insertId;
         res.status(201).json({ user_id: newUserId, username, email, full_name, role });
@@ -371,12 +303,8 @@ router.put('/users/:id', async (req, res) => {
     const { username, email, full_name, role, is_active, password } = req.body;
     try {
         const userQuery = 'SELECT * FROM users WHERE user_id = ?';
-        const user = await new Promise((resolve, reject) => {
-            pool.query(userQuery, [id], (err, results) => {
-                if (err) reject(err);
-                else resolve(results[0]);
-            });
-        });
+        const [user] = await pool.promise().query(userQuery, [id]);
+
 
         if (!user) {
             return res.status(404).json({ error: 'User not found' });
@@ -400,12 +328,8 @@ router.put('/users/:id', async (req, res) => {
             queryParams = [username, email, full_name, role, is_active, id];
         }
 
-        const result = await new Promise((resolve, reject) => {
-            pool.query(updateQuery, queryParams, (err, result) => {
-                if (err) reject(err);
-                else resolve(result);
-            });
-        });
+        const [result] = await pool.promise().query(updateQuery, queryParams);
+
 
         if (result.affectedRows === 0) {
             return res.status(404).json({ error: 'User not found' });
@@ -423,12 +347,8 @@ router.delete('/users/:id', async (req, res) => {
     const { id } = req.params;
     try {
         const userQuery = 'SELECT * FROM users WHERE user_id = ?';
-        const user = await new Promise((resolve, reject) => {
-            pool.query(userQuery, [id], (err, results) => {
-                if (err) reject(err);
-                else resolve(results[0]);
-            });
-        });
+        const [user] = await pool.promise().query(userQuery, [id]);
+
 
         if (!user) {
             return res.status(404).json({ error: 'User not found' });
@@ -439,12 +359,8 @@ router.delete('/users/:id', async (req, res) => {
         }
 
         const deactivateQuery = 'UPDATE users SET is_active = 0 WHERE user_id = ?';
-        const result = await new Promise((resolve, reject) => {
-            pool.query(deactivateQuery, [id], (err, result) => {
-                if (err) reject(err);
-                else resolve(result);
-            });
-        });
+        const [result] = await pool.promise().query(deactivateQuery, [id]);
+
 
         if (result.affectedRows === 0) {
             return res.status(404).json({ error: 'User not found' });
@@ -484,12 +400,8 @@ router.get('/orders', async (req, res) => {
         if (tableIdentifier) query += ` AND table_identifier LIKE '%${tableIdentifier}%'`; 
         if (orderId) query += ` AND order_id = ${orderId}`;
 
-        const orders = await new Promise((resolve, reject) => {
-            pool.query(query, (err, result) => {
-                if (err) reject(err);
-                else resolve(result);
-            });
-        });
+        const [orders] = await pool.promise().query(query);
+
         res.json(orders);
 
     } catch (error) {
@@ -504,12 +416,8 @@ router.get('/order/:id', async (req, res) => {
     try {
         // Query to get order details
         const orderQuery = 'SELECT * FROM orders WHERE order_id = ?';
-        const order = await new Promise((resolve, reject) => {
-            pool.query(orderQuery, [orderId], (err, results) => {
-                if (err) reject(err);
-                else resolve(results[0]);
-            });
-        });
+        const [order] = await pool.promise().query(orderQuery, [orderId]);
+
 
         if (!order) {
             return res.status(404).json({ error: 'Order not found' });
@@ -517,12 +425,8 @@ router.get('/order/:id', async (req, res) => {
 
         // Query to get order items
         const itemsQuery = 'SELECT * FROM order_items WHERE order_id = ?';
-        const items = await new Promise((resolve, reject) => {
-            pool.query(itemsQuery, [orderId], (err, results) => {
-                if (err) reject(err);
-                else resolve(results);
-            });
-        });
+        const [items] = await pool.promise().query(itemsQuery, [orderId]);
+
 
         res.json({ order, items });
     } catch (error) {

@@ -92,3 +92,45 @@
 .receptionist .text-light {
     color: #f8f9fa !important;
 }
+
+.receptionist {
+    background-color: #f8f9fa;
+}
+
+.table-card {
+    transition: transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
+    border-radius: 8px;
+    border: none;
+}
+
+.table-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+.hover-bubble {
+    position: absolute;
+    z-index: 10;
+    border: 1px solid #ccc;
+    max-width: 200px;
+}
+
+.card-title {
+    font-size: 1.25rem;
+}
+
+.alert {
+    margin-top: 1rem;
+}
+
+.bg-success {
+    background-color: #28a745 !important;
+}
+
+.bg-danger {
+    background-color: #dc3545 !important;
+}
+
+.bg-warning {
+    background-color: #ffc107 !important;
+}

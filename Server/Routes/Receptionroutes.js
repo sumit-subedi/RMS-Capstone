@@ -5,29 +5,25 @@ const mysql = require('mysql2/promise');
 
 router.get('/occupied_tables', async (req, res) => {
     try {
-        const query = 'SELECT * FROM tables WHERE status = "occupied"';
-        pool.query(query, async(err, tables) => {
-            if (err) {
-                console.error('Error fetching occupied tables:', err);
-                return res.status(500).json({ error: 'Internal Server Error' });
-            }
-            // Fetch order details for each occupied table
-            const tablesWithOrders = await Promise.all(tables.map(async (table) => {
-                const orders = await getOrderDetailsByTableId(table.table_id);
-                return {
-                    ...table,
-                    orders
-                };
-                
-            }));
+        // Query to get occupied tables
+        const [tables] = await pool.promise().query('SELECT * FROM tables WHERE status = "occupied"');
 
-            res.json(tablesWithOrders);
-        });
+        // Fetch order details for each occupied table
+        const tablesWithOrders = await Promise.all(tables.map(async (table) => {
+            const orders = await getOrderDetailsByTableId(table.table_id);
+            return {
+                ...table,
+                orders
+            };
+        }));
+
+        res.json(tablesWithOrders);
     } catch (error) {
-        console.error('Error:', error);
+        console.error('Error fetching occupied tables:', error);
         res.status(500).json({ error: 'Internal Server Error' });
     }
 });
+
 
 const getOrderDetailsByTableId = (tableId) => {
     return new Promise((resolve, reject) => {

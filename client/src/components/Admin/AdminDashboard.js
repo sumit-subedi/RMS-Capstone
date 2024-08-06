@@ -1,15 +1,15 @@
 import React, { useEffect, useState, useRef } from 'react';
-
 import axiosInstance from '../../axiosInstance';
 import Chart from 'chart.js/auto';
-
+import './styles.css'; 
 
 const AdminDashboard = () => {
     const [todaySales, setTodaySales] = useState(0);
     const [saleTrendData, setSaleTrendData] = useState([]);
     const [popularItems, setPopularItems] = useState([]);
     const [ongoingOrders, setOngoingOrders] = useState([]);
-    
+    const [errorMessage, setErrorMessage] = useState('');
+
     const saleTrendChartRef = useRef(null);
     const popularItemsChartRef = useRef(null);
 
@@ -20,7 +20,6 @@ const AdminDashboard = () => {
     const fetchData = async () => {
         try {
             const response = await axiosInstance.get('/admin/dashboard');
-
             const { todaySales, saleTrend, popularItems, ongoingOrders } = response.data;
             setTodaySales(todaySales);
             setSaleTrendData(saleTrend);
@@ -32,15 +31,24 @@ const AdminDashboard = () => {
             initializePopularItemsChart(popularItems);
 
         } catch (error) {
-            console.error('Error fetching data:', error);
+            handleError(error, 'Failed to fetch dashboard data');
         }
     };
 
+    const handleError = (error, defaultMessage) => {
+        if (error.response) {
+            setErrorMessage(`Error: ${error.response.status} ${error.response.data.message || error.response.statusText}`);
+        } else if (error.request) {
+            setErrorMessage('Error: No response from server. Please try again later.');
+        } else {
+            setErrorMessage(`Error: ${error.message}`);
+        }
+        console.error(defaultMessage, error);
+    };
+
     const initializeSaleTrendChart = (saleTrend) => {
-        const trendLabels = saleTrend.map(data => {
-            const date = new Date(data.date);
-            return date.toLocaleDateString(); 
-        });        const trendData = saleTrend.map(data => data.totalSales);
+        const trendLabels = saleTrend.map(data => new Date(data.date).toLocaleDateString());
+        const trendData = saleTrend.map(data => data.totalSales);
 
         const ctx = document.getElementById('saleTrendChart');
         if (saleTrendChartRef.current) {
@@ -53,34 +61,35 @@ const AdminDashboard = () => {
                 datasets: [{
                     label: 'Sales Trend',
                     data: trendData,
-                    borderColor: 'blue',
-                    backgroundColor: 'rgba(0, 123, 255, 0.5)',
+                    borderColor: '#007bff',
+                    backgroundColor: 'rgba(0, 123, 255, 0.2)',
                 }]
             },
             options: {
+                responsive: true,
                 scales: {
                     y: {
                         beginAtZero: true,
                         ticks: {
-                            color: 'white' 
+                            color: '#ffffff'
                         }
                     },
                     x: {
                         ticks: {
-                            color: 'white' 
+                            color: '#ffffff'
                         }
                     }
                 },
                 plugins: {
                     legend: {
                         labels: {
-                            color: 'white' // Change the color of the legend labels
+                            color: '#ffffff'
                         }
                     },
                     title: {
                         display: true,
-                        text: 'Most Popular Items',
-                        color: 'white', 
+                        text: 'Sales Trend Over Time',
+                        color: '#ffffff',
                         font: {
                             size: 18
                         }
@@ -93,7 +102,7 @@ const AdminDashboard = () => {
     const initializePopularItemsChart = (popularItems) => {
         const itemLabels = popularItems.map(item => item.item_name);
         const itemData = popularItems.map(item => item.totalQuantity);
-    
+
         const ctx = document.getElementById('popularItemsChart');
         if (popularItemsChartRef.current) {
             popularItemsChartRef.current.destroy();
@@ -105,35 +114,36 @@ const AdminDashboard = () => {
                 datasets: [{
                     label: 'Most Popular Items',
                     data: itemData,
-                    backgroundColor: 'rgba(0, 123, 255, 0.5)',
-                    borderColor: 'rgba(0, 123, 255, 1)',
+                    backgroundColor: 'rgba(40, 167, 69, 0.5)',
+                    borderColor: 'rgba(40, 167, 69, 1)',
                     borderWidth: 1
                 }]
             },
             options: {
+                responsive: true,
                 scales: {
                     y: {
                         beginAtZero: true,
                         ticks: {
-                            color: 'white' // Change the color of y-axis labels
+                            color: '#ffffff'
                         }
                     },
                     x: {
                         ticks: {
-                            color: 'white' 
+                            color: '#ffffff'
                         }
                     }
                 },
                 plugins: {
                     legend: {
                         labels: {
-                            color: 'white' // Change the color of the legend labels
+                            color: '#ffffff'
                         }
                     },
                     title: {
                         display: true,
-                        text: 'Most Popular Items',
-                        color: 'white', 
+                        text: 'Top Selling Items',
+                        color: '#ffffff',
                         font: {
                             size: 18
                         }
@@ -142,20 +152,20 @@ const AdminDashboard = () => {
             }
         });
     };
-    
 
     return (
-        <div className="">
+        <div className="admin-dashboard bg-dark text-white">
             <div className="row">
-                <main className="col-md-9 ms-sm-auto col-lg-10 bg-dark px-md-4">
-                    <div className="pt-3 pb-2 mb-3 border-bottom text-white">
+                <main className="col-md-9 ms-sm-auto col-lg-10 px-md-4">
+                    <div className="pt-3 pb-2 mb-3 border-bottom">
                         <h1 className="h2">Admin Dashboard</h1>
                     </div>
 
-                    {/* Total Sales for Today */}
+                    {errorMessage && <div className="alert alert-danger" role="alert">{errorMessage}</div>}
+
                     <div className="row">
                         <div className="col-md-6">
-                            <div className="card bg-primary text-white mb-4">
+                            <div className="card bg-primary text-white mb-4 shadow">
                                 <div className="card-body">
                                     <h5 className="card-title">Total Sales for Today</h5>
                                     <p className="card-text">${todaySales}</p>
@@ -164,10 +174,9 @@ const AdminDashboard = () => {
                         </div>
                     </div>
 
-                    {/* Sale Trend Chart */}
                     <div className="row">
                         <div className="col-md-8">
-                            <div className="card bg-secondary text-white mb-4">
+                            <div className="card bg-secondary text-white mb-4 shadow">
                                 <div className="card-body">
                                     <h5 className="card-title">Sales Trend</h5>
                                     <canvas id="saleTrendChart"></canvas>
@@ -176,10 +185,9 @@ const AdminDashboard = () => {
                         </div>
                     </div>
 
-                    {/* Popular Items */}
                     <div className="row">
                         <div className="col-md-8">
-                            <div className="card bg-secondary text-white mb-4">
+                            <div className="card bg-secondary text-white mb-4 shadow">
                                 <div className="card-body">
                                     <h5 className="card-title">Most Popular Items</h5>
                                     <canvas id="popularItemsChart"></canvas>
@@ -188,10 +196,9 @@ const AdminDashboard = () => {
                         </div>
                     </div>
 
-                    {/* Ongoing Orders */}
                     <div className="row">
                         <div className="col-md-6">
-                            <div className="card bg-secondary text-white mb-4">
+                            <div className="card bg-secondary text-white mb-4 shadow">
                                 <div className="card-body">
                                     <h5 className="card-title">Ongoing Orders</h5>
                                     <ul className="list-group list-group-flush">
@@ -207,7 +214,6 @@ const AdminDashboard = () => {
                         </div>
                     </div>
 
-                    
                 </main>
             </div>
         </div>

@@ -17,9 +17,8 @@ const ReceptionistPage = () => {
             try {
                 const response = await axiosInstance.get('/reception/occupied_tables');
                 setOccupiedTables(response.data);
-                console.log(response.data);
             } catch (error) {
-                setError('Error fetching occupied tables:', error);
+                handleError(error, 'Failed to fetch occupied tables');
             }
         };
 
@@ -43,12 +42,23 @@ const ReceptionistPage = () => {
         }
     };
 
+    const handleError = (error, defaultMessage) => {
+        if (error.response) {
+            setError(`Error: ${error.response.status} ${error.response.data.message || error.response.statusText}`);
+        } else if (error.request) {
+            setError('Error: No response from server. Please try again later.');
+        } else {
+            setError(`Error: ${error.message}`);
+        }
+        console.error(defaultMessage, error);
+    };
+
     return (
         <div className="receptionist container-fluid bg-light text-dark vh-100">
             <Navbar />
             <div className="container mt-5">
                 <h2 className="text-center mb-4">Welcome to the Reception</h2>
-                {error && <p className="text-danger text-center">{error}</p>}
+                {error && <p className="alert alert-danger text-center">{error}</p>}
                 <div className="row justify-content-center">
                     {occupiedTables.map(table => (
                         <div
@@ -58,8 +68,9 @@ const ReceptionistPage = () => {
                             onMouseLeave={() => setHoveredTableId(null)}
                         >
                             <div
-                                className={`card table-card ${getTableColor(table.status)}`}
+                                className={`card table-card ${getTableColor(table.status)} shadow`}
                                 onClick={() => handleTableClick(table.table_id)}
+                                style={{ cursor: 'pointer', transition: 'transform 0.3s' }}
                             >
                                 <div className="card-body d-flex flex-column justify-content-center align-items-center">
                                     <h5 className="card-title">Table {table.table_number}</h5>
@@ -67,15 +78,15 @@ const ReceptionistPage = () => {
                                 </div>
                             </div>
                             {hoveredTableId === table.table_id && (
-                                <div className="hover-bubble">
+                                <div className="hover-bubble p-3 rounded shadow-sm bg-white text-dark">
                                     {table.orders.map(order => (
-                                        <div key={order.active_order_id}>
+                                        <div key={order.active_order_id} className="mb-2">
                                             <h6>Order ID: {order.active_order_id}</h6>
                                             <p>Status: {order.status}</p>
                                             <ul className="list-unstyled">
                                                 {order.items.map((item, index) => (
                                                     <li key={index}>
-                                                        {item.name} - {item.quantity} pc - ${item.price.toFixed(2)}
+                                                        {item.name} - {item.quantity} pc - ${(Number(item.price) || 0).toFixed(2)}
                                                     </li>
                                                 ))}
                                             </ul>
@@ -92,3 +103,5 @@ const ReceptionistPage = () => {
 };
 
 export default ReceptionistPage;
+
+

@@ -2,9 +2,7 @@ const jwt = require('jsonwebtoken');
 const JWT_SECRET = process.env.JWT_SECRET || 'a4f8071c613db1b9e2ca8a1df3f3d2e4b5a3c1d4f2b2c1a3e3d4a2f1b3c4d5e6f7a8b9c0d1e2f3g4h5i6j7k8l9m0n1o2p3';
 
 function authenticateRole(roles) {
-    console.log('here');
     return (req, res, next) => {
-        console.log('here');
 
         const token = req.header('Authorization') && req.header('Authorization').replace('Bearer ', '');
         if (!token) {

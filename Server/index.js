@@ -27,7 +27,7 @@ app.use('/waiter', checkRole('waiter'), waiterRoutes);
 app.use('/reception', checkRole('receptionist'), receptionistRoutes);
 app.use('/admin', checkRole('admin'), adminRoutes);
 
-const PORT = process.env.PORT || 5000;
+const PORT = process.env.SERVER_PORT || 3000;
 app.listen(PORT, () => {
     console.log(`Server is running on port ${PORT}`);
 });

@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { login } from '../api';
+import Cookies from 'js-cookie'; // Import js-cookie
 
 const LoginPage = ({ setToken, setRole }) => {
     const [username, setUsername] = useState('');
@@ -15,6 +16,9 @@ const LoginPage = ({ setToken, setRole }) => {
             const { token, role } = await login(username, password);
             console.log(token, role);
             localStorage.setItem('token', token);
+
+            // Save the role in a cookie
+            Cookies.set('user_role', role, { expires: 7 }); // Expires in 7 days
 
             setToken(token);
             setRole(role);

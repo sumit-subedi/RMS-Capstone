@@ -1,0 +1,73 @@
+version: "3"
+
+services:
+  db: # Defines the 'db' service for MySQL database
+    image: mysql:latest # Uses the MySQL 8.0 Docker image
+    # command: ["mysqld", "--mysql-native-password=ON"]
+
+    environment: # Sets environment variables for the database configuration
+      - MYSQL_USER=sumit
+      - MYSQL_DATABASE=restaurant_db # Specifies the name of the database
+      - MYSQL_PASSWORD=pass123 # Sets the password for the MySQL user
+      - MYSQL_ROOT_PASSWORD=pass123 # Sets the root password for MySQL
+    networks:
+      - sameNetworkAsMysql # Connects the service to the 'sameNetworkAsMysql' network
+    volumes:
+      - ./db/sample.sql:/docker-entrypoint-initdb.d/sample.sql
+      # - ./db/my.conf:/etc/mysql/my.cnf
+
+    ports:
+      - 3307:3306 # Maps the container's port 3306 to the host's port 3307
+
+  nginx:
+    image:
+      'nginx:latest'
+    depends_on:
+      - api
+      - frontend
+    restart: always
+    build:
+      dockerfile: Dockerfile.dev
+      context: ./nginx
+    ports:
+      - "3050:80"
+
+
+  api: # Defines the 'api' service for the backend API
+    build: # Builds the backend API using the provided Dockerfile
+      context: ./Server # Specifies the build context directory for the backend
+      dockerfile: Dockerfile # Specifies the Dockerfile to use for building the backend
+    ports:
+      - 3000:3000 # Maps the container's port 3000 to the host's port 3000
+    networks:
+      - sameNetworkAsMysql # Connects the service to the 'sameNetworkAsMysql' network
+    environment:
+      - DB_USER=sumit
+      - DB_HOST=db
+      - DB_NAME=restaurant_db
+      - DB_PASSWORD=pass123
+      - DB_PORT=3306
+
+    depends_on:
+      - db # Specifies that the 'api' service depends on the 'db' service
+
+  frontend: # Defines the 'frontend' service for the frontend app
+    restart: on-failure # Restarts the container if it fails
+    build: # Builds the frontend app using the provided Dockerfile
+      context: ./client # Specifies the build context directory for the frontend
+    ports:
+      - 3001:3000 # Maps the container's port 3000 to the host's port 3001
+    networks:
+      - sameNetworkAsMysql # Connects the service to the 'sameNetworkAsMysql' network
+    depends_on:
+      - api # Specifies that the 'frontend' service depends on the 'api' service
+
+  adminer:
+    image: adminer
+    restart: always
+    ports:
+      - 8081:8080
+
+networks:
+  sameNetworkAsMysql: # Defines the 'sameNetworkAsMysql' network
+    driver: bridge # Specifies the network driver as 'bridge'

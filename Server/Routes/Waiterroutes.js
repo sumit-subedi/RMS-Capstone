@@ -12,12 +12,7 @@ router.get('/orders', (req, res) => {
 router.get('/tables', async (req, res) => {
     try {
         const query = 'SELECT * FROM tables';
-        const results = await new Promise((resolve, reject) => {
-            pool.query(query, (err, results) => {
-                if (err) reject(err);
-                else resolve(results);
-            });
-        });
+        const [results] = await pool.promise().query(query);
 
         if (!Array.isArray(results)) {
             throw new Error('Unexpected query result format');
@@ -41,12 +36,8 @@ router.get('/tables', async (req, res) => {
 router.get('/menu_items', async (req, res) => {
     try {
         const query = 'SELECT * FROM menu_items';
-        const results = await new Promise((resolve, reject) => {
-            pool.query(query, (err, results) => {
-                if (err) reject(err);
-                else resolve(results);
-            });
-        });
+        const [results] = await pool.promise().query(query);
+
         const categorizedItems = results.reduce((acc, item) => {
             if (!acc[item.category]) acc[item.category] = [];
             acc[item.category].push(item);
@@ -63,13 +54,17 @@ router.get('/menu_items', async (req, res) => {
 router.post('/orders/:tableId/items', async (req, res) => {
     const { tableId } = req.params;
     const { itemId, quantity } = req.body;
+
+    
     try {
         // Check if an active order exists, if not create one
-        let orderId = await getOrCreateActiveOrder(tableId);
+        let orderId = await getOrCreateActiveOrder(tableId, req.user.userId);
         
         // Add item to order
-        await pool.query('INSERT INTO active_order_items (active_order_id, item_id, quantity) VALUES (?, ?, ?)', [orderId, itemId, quantity]);
-        
+        await pool.promise().query(
+            'INSERT INTO active_order_items (active_order_id, item_id, quantity) VALUES (?, ?, ?)',
+            [orderId, itemId, quantity]
+        );        
         res.status(201).json({ message: 'Item added to order' });
     } catch (error) {
         console.error('Error adding item to order:', error);
@@ -79,14 +74,13 @@ router.post('/orders/:tableId/items', async (req, res) => {
 
 // DELETE /waiter/orders/:tableId
 router.delete('/orders/:tableId', async (req, res) => {
-    console.log("here");
     const { tableId } = req.params;
     try {
         // Delete Order Items
-        await pool.query('DELETE FROM active_order_items WHERE active_order_id IN (SELECT active_order_id FROM active_orders WHERE table_id = ?)', [tableId]);
+        await pool.promise().query('DELETE FROM active_order_items WHERE active_order_id IN (SELECT active_order_id FROM active_orders WHERE table_id = ?)', [tableId]);
 
-        await pool.query('DELETE FROM active_orders WHERE table_id = ?', [tableId]);
-        await pool.query('UPDATE tables SET status = "available" WHERE table_id = ?', [tableId]);
+        await pool.promise().query('DELETE FROM active_orders WHERE table_id = ?', [tableId]);
+        await pool.promise().query('UPDATE tables SET status = "available" WHERE table_id = ?', [tableId]);
         res.json({ message: 'Order cancelled successfully' });
     } catch (error) {
         console.error('Error cancelling order:', error);
@@ -98,7 +92,7 @@ router.delete('/orders/:tableId/items/:itemId', async (req, res) => {
     const { tableId, itemId } = req.params;
     try {
         // Perform deletion from your database (adjust the SQL query as per your schema)
-        await pool.query('DELETE FROM active_order_items WHERE active_order_id IN (SELECT active_order_id FROM active_orders WHERE table_id = ? AND status = "in_progress") AND item_id = ?', [tableId, itemId]);
+        await pool.promise().query('DELETE FROM active_order_items WHERE active_order_id IN (SELECT active_order_id FROM active_orders WHERE table_id = ? AND status = "in_progress") AND item_id = ?', [tableId, itemId]);
 
         // Check if there are any remaining items in the active order
         const checkRemainingItemsQuery = `
@@ -110,13 +104,8 @@ router.delete('/orders/:tableId/items/:itemId', async (req, res) => {
             WHERE table_id = ? AND status = "in_progress"
         )
         `;
-        const result = await new Promise((resolve, reject) => {
-            pool.query(checkRemainingItemsQuery, [tableId], (err, results) => {
-                if (err) reject(err);
-                else resolve(results);
-            });
-        });
-        console.log(result);
+        const [result] = await pool.promise().query(checkRemainingItemsQuery, [tableId]);
+
         const itemCount = result[0].itemCount;
         console.log(itemCount);
 
@@ -128,8 +117,8 @@ router.delete('/orders/:tableId/items/:itemId', async (req, res) => {
             SET status = "available" 
             WHERE table_id = ?
         `;
-        await pool.query(updateTableQuery, [tableId]);
-        }
+        await pool.promise().query(updateTableQuery, [tableId]);
+    }
         res.json({ message: 'Item deleted successfully' });
     } catch (error) {
         console.error('Error deleting item:', error);
@@ -138,27 +127,19 @@ router.delete('/orders/:tableId/items/:itemId', async (req, res) => {
 });
 
 // Helper function to get or create an active order
-async function getOrCreateActiveOrder(tableId) {
+async function getOrCreateActiveOrder(tableId, userId) {
     try {
         const query = 'SELECT active_order_id FROM active_orders WHERE table_id = ? AND status = "in_progress"';
-        const rows = await new Promise((resolve, reject) => {
-            pool.query(query, [tableId], (err, results) => {
-                if (err) reject(err);
-                else resolve(results);
-            });
-        });
+        const [rows] = await pool.promise().query(query, [tableId]);
+
         if (rows && rows.length > 0) {
             return rows[0].active_order_id;
         } else {
             console.log("here else");
-            const query = 'INSERT INTO active_orders (table_id, status) VALUES (?, "in_progress")';
-            const rows = await new Promise((resolve, reject) => {
-                pool.query(query, [tableId], (err, results) => {
-                    if (err) reject(err);
-                    else resolve(results);
-                });
-            });
-            await pool.query('UPDATE tables SET status = "occupied" WHERE table_id = ?', [tableId]);
+            const query = 'INSERT INTO active_orders (table_id, status, user_id) VALUES (?, "in_progress", ?)';
+            const [rows] = await pool.promise().query(query, [tableId, userId]);
+
+            await pool.promise().query('UPDATE tables SET status = "occupied" WHERE table_id = ?', [tableId]);
 
             return rows.insertId;
         }
@@ -176,54 +157,50 @@ router.post('/orders', async (req, res) => {
         return res.status(400).json({ error: 'Invalid input. Please provide tableId, items array, and userId.' });
     }
 
-    const client = await pool.connect();
-
+    const connection = await pool.promise().getConnection();
+    
     try {
-        await client.query('BEGIN');
+        await connection.beginTransaction();
 
         // Check if an active order exists for the table
-        const existingOrderQuery = 'SELECT active_order_id FROM active_orders WHERE table_id = $1 AND status = $2';
-        const existingOrderResult = await client.query(existingOrderQuery, [tableId, 'in_progress']);
+        const [existingOrderResult] = await connection.query('SELECT active_order_id FROM active_orders WHERE table_id = ? AND status = "in_progress"', [tableId]);
 
         let activeOrderId;
-        if (existingOrderResult.rows.length > 0) {
+        if (existingOrderResult.length > 0) {
             // Update existing active order
-            activeOrderId = existingOrderResult.rows[0].active_order_id;
-            await client.query('DELETE FROM active_order_items WHERE active_order_id = $1', [activeOrderId]);
+            activeOrderId = existingOrderResult[0].active_order_id;
+            await connection.query('DELETE FROM active_order_items WHERE active_order_id = ?', [activeOrderId]);
         } else {
             // Create new active order
-            const newOrderQuery = `
+            const [newOrderResult] = await connection.query(`
                 INSERT INTO active_orders (user_id, table_id, status)
-                VALUES ($1, $2, 'in_progress')
-                RETURNING active_order_id
-            `;
-            const newOrderResult = await client.query(newOrderQuery, [userId, tableId]);
-            activeOrderId = newOrderResult.rows[0].active_order_id;
+                VALUES (?, ?, 'in_progress')
+            `, [userId, tableId]);
+            activeOrderId = newOrderResult.insertId;
         }
 
         // Insert active order items
         const insertItemQuery = `
             INSERT INTO active_order_items (active_order_id, item_id, quantity)
-            VALUES ($1, $2, $3)
+            VALUES (?, ?, ?)
         `;
         for (const item of items) {
-            await client.query(insertItemQuery, [activeOrderId, item.itemId, item.quantity]);
+            await connection.query(insertItemQuery, [activeOrderId, item.itemId, item.quantity]);
         }
 
         // Update table status
-        await client.query('UPDATE tables SET status = $1 WHERE table_id = $2', ['occupied', tableId]);
+        await connection.query('UPDATE tables SET status = ? WHERE table_id = ?', ['occupied', tableId]);
 
         // Calculate total amount (for information purposes, not stored in active_orders)
-        const totalAmountQuery = `
+        const [totalAmountResult] = await connection.query(`
             SELECT SUM(mi.price * aoi.quantity) as total_amount
             FROM active_order_items aoi
             JOIN menu_items mi ON aoi.item_id = mi.item_id
-            WHERE aoi.active_order_id = $1
-        `;
-        const totalAmountResult = await client.query(totalAmountQuery, [activeOrderId]);
-        const totalAmount = totalAmountResult.rows[0].total_amount;
+            WHERE aoi.active_order_id = ?
+        `, [activeOrderId]);
+        const totalAmount = totalAmountResult[0].total_amount;
 
-        await client.query('COMMIT');
+        await connection.commit();
 
         res.status(201).json({ 
             message: 'Order created/updated successfully', 
@@ -232,55 +209,52 @@ router.post('/orders', async (req, res) => {
         });
 
     } catch (error) {
-        await client.query('ROLLBACK');
+        await connection.rollback();
         console.error('Error creating/updating order:', error);
         res.status(500).json({ error: 'Internal Server Error' });
     } finally {
-        client.release();
+        connection.release();
     }
 });
+
 
 router.get('/menu_items', async (req, res) => {
     try {
         // Query the menu items database to retrieve menu information
-        pool.query('SELECT * FROM menu_items', (err, results) => {
-            if (err) {
-                return res.status(500).json({ message: 'Database error', error: err });
+        const [results] = await pool.promise().query('SELECT * FROM menu_items');
+
+        // Initialize an object to store menu items categorized by type
+        const categorizedMenuItems = {
+            pizza: [],
+            salad: [],
+            desserts: [],
+            pasta: [],
+            others: [],
+        };
+
+        // Iterate through the results and categorize each menu item
+        results.forEach(item => {
+            switch (item.category) {
+                case 'Pizza':
+                    categorizedMenuItems.pizza.push(item);
+                    break;
+                case 'Salad':
+                    categorizedMenuItems.salad.push(item);
+                    break;
+                case 'Desserts':
+                    categorizedMenuItems.desserts.push(item);
+                    break;
+                case 'Pasta':
+                    categorizedMenuItems.pasta.push(item);
+                    break;
+                default:
+                    categorizedMenuItems.others.push(item);
+                    break;
             }
-    
-            // Initialize an object to store menu items categorized by type
-            const categorizedMenuItems = {
-                pizza: [],
-                salad: [],
-                desserts: [],
-                pasta: [],
-                others: [],
-            };
-    
-            // Iterate through the results and categorize each menu item
-            results.forEach(item => {
-                switch (item.category) {
-                    case 'Pizza':
-                        categorizedMenuItems.pizza.push(item);
-                        break;
-                    case 'Salad':
-                        categorizedMenuItems.salad.push(item);
-                        break;
-                    case 'Desserts':
-                        categorizedMenuItems.desserts.push(item);
-                        break;
-                    case 'Pasta':
-                        categorizedMenuItems.pasta.push(item);
-                        break;
-                    default:
-                        categorizedMenuItems.others.push(item);
-                        break;
-                }
-            });
-    
-            // Send the categorized menu items as a JSON response to the client
-            res.json(categorizedMenuItems);
         });
+
+        // Send the categorized menu items as a JSON response to the client
+        res.json(categorizedMenuItems);
     } catch (error) {
         console.error('Error fetching menu items:', error);
         res.status(500).json({ error: 'Internal Server Error' });
@@ -312,12 +286,8 @@ router.get('/orders/:tableId', async (req, res) => {
                        JOIN menu_items AS i ON oi.item_id = i.item_id
                        WHERE o.table_id = ?`;
         // Query the database to retrieve items for the specified table
-        const items = await new Promise((resolve, reject) => {
-            pool.query(query, [tableId], (err, results) => {
-                if (err) reject(err);
-                else resolve(results);
-            });
-        });
+        const [items] = await pool.promise().query(query, [tableId]);
+
         if (items.length === 0) {
             return res.status(404).json({ message: 'No items found for this table' });
         }

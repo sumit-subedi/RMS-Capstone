@@ -1,8 +1,8 @@
 -- Insert demo users with bcrypt-hashed passwords
 INSERT INTO users (username, password, email, full_name, role) VALUES
-('john_waiter', '$2b$10$rNE4b4ObjrA8B3C5E8OYUeLu1z9eWoHnIlf5qB6CXZJu8r7TsJTHy', 'john@example.com', 'John Doe', 'waiter'),
-('sarah_receptionist', '$2b$10$rNE4b4ObjrA8B3C5E8OYUeLu1z9eWoHnIlf5qB6CXZJu8r7TsJTHy', 'sarah@example.com', 'Sarah Smith', 'receptionist'),
-('mike_admin', '$2b$10$rNE4b4ObjrA8B3C5E8OYUeLu1z9eWoHnIlf5qB6CXZJu8r7TsJTHy', 'mike@example.com', 'Mike Johnson', 'admin');
+('waiter', '$2b$10$rNE4b4ObjrA8B3C5E8OYUeLu1z9eWoHnIlf5qB6CXZJu8r7TsJTHy', 'john@example.com', 'John Doe', 'waiter'),
+('receptionist', '$2b$10$rNE4b4ObjrA8B3C5E8OYUeLu1z9eWoHnIlf5qB6CXZJu8r7TsJTHy', 'sarah@example.com', 'Sarah Smith', 'receptionist'),
+('admin', '$2b$10$rNE4b4ObjrA8B3C5E8OYUeLu1z9eWoHnIlf5qB6CXZJu8r7TsJTHy', 'mike@example.com', 'Mike Johnson', 'admin');
 
 
 -- Insert demo menu items

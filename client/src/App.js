@@ -1,5 +1,6 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { BrowserRouter as Router, Route, Routes, Navigate } from 'react-router-dom';
+import Cookies from 'js-cookie';
 import LoginPage from './pages/LoginPage';
 import AdminPage from './pages/AdminPage';
 import ReceptionistPage from './pages/ReceptionistPage';
@@ -10,7 +11,12 @@ import BillingPage from './components/Receptionist/BillingPage';
 
 const App = () => {
     const [token, setToken] = useState(localStorage.getItem('token'));
-    const [role, setRole] = useState(localStorage.getItem('role'));
+    const [role, setRole] = useState(Cookies.get('user_role'));
+
+    useEffect(() => {
+        // Update role from cookies whenever the component mounts
+        setRole(Cookies.get('user_role'));
+    }, []);
 
     const renderPageBasedOnRole = () => {
         if (!token) {
@@ -19,11 +25,11 @@ const App = () => {
 
         switch (role) {
             case 'admin':
-                return <AdminPage />;
+                return <Navigate to="/admin" />;
             case 'receptionist':
-                return <ReceptionistPage />;
+                return <Navigate to="/reception" />;
             case 'waiter':
-                return <WaiterPage />;
+                return <Navigate to="/waiter" />;
             default:
                 return <Navigate to="/login" />;
         }
@@ -39,8 +45,7 @@ const App = () => {
                 <Route path="/" element={renderPageBasedOnRole()} />
                 <Route path="/tables/:tableId" element={<TableDetailsPage />} />
                 <Route path="/waiter/menu" element={<MenuPage />} />
-                <Route path="reception/billing/:tableId" element={<BillingPage />} />
-
+                <Route path="/reception/billing/:tableId" element={<BillingPage />} />
             </Routes>
         </Router>
     );

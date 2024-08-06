@@ -12,6 +12,7 @@ const MenuItemForm = () => {
         description: ''
     });
     const [loading, setLoading] = useState(false);
+    const [errorMessage, setErrorMessage] = useState('');
 
     useEffect(() => {
         if (id) {
@@ -24,7 +25,7 @@ const MenuItemForm = () => {
             const response = await axiosInstance.get(`admin/menu-items/${id}`);
             setItem(response.data);
         } catch (error) {
-            console.error('Error fetching menu item:', error);
+            handleError(error, 'Failed to fetch menu item');
         }
     };
 
@@ -35,6 +36,7 @@ const MenuItemForm = () => {
     const handleSubmit = async (e) => {
         e.preventDefault();
         setLoading(true);
+        setErrorMessage('');
         try {
             if (id) {
                 await axiosInstance.put(`admin/menu-items/${id}`, item);
@@ -45,8 +47,19 @@ const MenuItemForm = () => {
             navigate('/admin/menu-items');
         } catch (error) {
             setLoading(false);
-            console.error('Error saving menu item:', error);
+            handleError(error, 'Error saving menu item');
         }
+    };
+
+    const handleError = (error, defaultMessage) => {
+        if (error.response) {
+            setErrorMessage(`Error: ${error.response.status} ${error.response.data.message || error.response.statusText}`);
+        } else if (error.request) {
+            setErrorMessage('Error: No response from server. Please try again later.');
+        } else {
+            setErrorMessage(`Error: ${error.message}`);
+        }
+        console.error(defaultMessage, error);
     };
 
     return (
@@ -56,6 +69,7 @@ const MenuItemForm = () => {
                     <h2 className="mb-0">{id ? 'Edit Menu Item' : 'Add Menu Item'}</h2>
                 </div>
                 <div className="card-body">
+                    {errorMessage && <div className="alert alert-danger" role="alert">{errorMessage}</div>}
                     <form onSubmit={handleSubmit}>
                         <div className="mb-3">
                             <label className="form-label text-light">Name</label>
@@ -65,7 +79,7 @@ const MenuItemForm = () => {
                             <label className="form-label text-light">Price</label>
                             <div className="input-group">
                                 <span className="input-group-text bg-dark text-light">$</span>
-                                <input type="number" className="form-control bg-dark text-light" name="price" value={item.price} onChange={handleChange} required />
+                                <input type="number" step="0.01" className="form-control bg-dark text-light" name="price" value={item.price} onChange={handleChange} required />
                             </div>
                         </div>
                         <div className="mb-3">
@@ -84,8 +98,12 @@ const MenuItemForm = () => {
                             <textarea className="form-control bg-dark text-light" name="description" value={item.description} onChange={handleChange}></textarea>
                         </div>
                         <div className="d-grid gap-2">
-                            <button type="submit" className={`btn btn-secondary bg-dark text-light ${loading ? 'disabled' : ''}`} disabled={loading}>{loading ? 'Saving...' : (id ? 'Update' : 'Add')}</button>
-                            <button type="button" className="btn btn-secondary" onClick={() => navigate('/admin/menu-items')}>Cancel</button>
+                            <button type="submit" className={`btn btn-primary ${loading ? 'disabled' : ''}`} disabled={loading}>
+                                {loading ? 'Saving...' : (id ? 'Update' : 'Add')}
+                            </button>
+                            <button type="button" className="btn btn-secondary" onClick={() => navigate('/admin/menu-items')}>
+                                Cancel
+                            </button>
                         </div>
                     </form>
                 </div>

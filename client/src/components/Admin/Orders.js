@@ -2,7 +2,6 @@ import React, { useState, useEffect } from 'react';
 import axiosInstance from '../../axiosInstance';
 import { Link } from 'react-router-dom';
 
-
 const AdminOrders = () => {
     const [orders, setOrders] = useState([]);
     const [filters, setFilters] = useState({
@@ -18,19 +17,36 @@ const AdminOrders = () => {
     const [totalAmount, setTotalAmount] = useState(0);
     const [sortColumn, setSortColumn] = useState('');
     const [sortDirection, setSortDirection] = useState('asc'); // 'asc' or 'desc'
+    const [loading, setLoading] = useState(false);
+    const [error, setError] = useState(null);
 
     useEffect(() => {
         fetchOrders();
     }, [filters, sortColumn, sortDirection]); // Update orders whenever filters, sort column, or sort direction change
 
     const fetchOrders = async () => {
+        setLoading(true);
         try {
             const response = await axiosInstance.get('admin/orders', { params: { ...filters, sortColumn, sortDirection } });
             setOrders(response.data);
             calculateTotalAmount(response.data); // Calculate total amount on update
+            setError(null);
         } catch (error) {
-            console.error('Error fetching orders:', error);
+            handleError(error, 'Error fetching orders');
+        } finally {
+            setLoading(false);
         }
+    };
+
+    const handleError = (error, defaultMessage) => {
+        if (error.response) {
+            setError(`Error: ${error.response.status} ${error.response.data.message || error.response.statusText}`);
+        } else if (error.request) {
+            setError('Error: No response from server. Please try again later.');
+        } else {
+            setError(`Error: ${error.message}`);
+        }
+        console.error(defaultMessage, error);
     };
 
     const calculateTotalAmount = (orders) => {
@@ -86,6 +102,9 @@ const AdminOrders = () => {
     return (
         <div className="container py-4 text-light">
             <h2 className="mb-4">Admin Orders</h2>
+
+            {error && <div className="alert alert-danger">{error}</div>}
+
             {/* Filter Controls */}
             <div className="row mb-3">
                 <div className="col">
@@ -117,46 +136,51 @@ const AdminOrders = () => {
                     <button className="btn btn-secondary" onClick={resetFilters}>Reset Filters</button>
                 </div>
             </div>
+
             {/* Order Table */}
             <div className="table-responsive">
-                <table className="table table-striped table-hover text-light">
-                    <thead>
-                        <tr>
-                            <th onClick={() => handleSort('order_id')} className="cursor-pointer">
-                                Order ID {sortColumn === 'order_id' && <i className={`bi bi-arrow-${sortDirection === 'asc' ? 'down' : 'up'}`}></i>}
-                            </th>
-                            <th onClick={() => handleSort('user_name')} className="cursor-pointer">
-                                User {sortColumn === 'user_name' && <i className={`bi bi-arrow-${sortDirection === 'asc' ? 'down' : 'up'}`}></i>}
-                            </th>
-                            <th onClick={() => handleSort('status')} className="cursor-pointer">
-                                Status {sortColumn === 'status' && <i className={`bi bi-arrow-${sortDirection === 'asc' ? 'down' : 'up'}`}></i>}
-                            </th>
-                            <th onClick={() => handleSort('total_amount')} className="cursor-pointer">
-                                Total Amount {sortColumn === 'total_amount' && <i className={`bi bi-arrow-${sortDirection === 'asc' ? 'down' : 'up'}`}></i>}
-                            </th>
-                            <th onClick={() => handleSort('table_identifier')} className="cursor-pointer">
-                                Table {sortColumn === 'table_identifier' && <i className={`bi bi-arrow-${sortDirection === 'asc' ? 'down' : 'up'}`}></i>}
-                            </th>
-                            {/* Add more columns as needed */}
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {sortedOrders.map(order => (
-                            <tr key={order.order_id}>
-                                <td>{order.order_id}</td>
-                                <td>{order.user_name}</td>
-                                <td>{order.status}</td>
-                                <td>${order.total_amount}</td>
-                                <td>{order.table_identifier}</td>
-                                <td>
-                                    <Link to={`/admin/order/${order.order_id}`} className="btn btn-info btn-sm">View Details</Link>
-                                </td>
-                                {/* Display timestamps or additional details */}
+                {loading ? (
+                    <div>Loading...</div>
+                ) : (
+                    <table className="table table-striped table-hover text-light">
+                        <thead>
+                            <tr>
+                                <th onClick={() => handleSort('order_id')} className="cursor-pointer">
+                                    Order ID {sortColumn === 'order_id' && <i className={`bi bi-arrow-${sortDirection === 'asc' ? 'down' : 'up'}`}></i>}
+                                </th>
+                                <th onClick={() => handleSort('user_name')} className="cursor-pointer">
+                                    User {sortColumn === 'user_name' && <i className={`bi bi-arrow-${sortDirection === 'asc' ? 'down' : 'up'}`}></i>}
+                                </th>
+                                <th onClick={() => handleSort('status')} className="cursor-pointer">
+                                    Status {sortColumn === 'status' && <i className={`bi bi-arrow-${sortDirection === 'asc' ? 'down' : 'up'}`}></i>}
+                                </th>
+                                <th onClick={() => handleSort('total_amount')} className="cursor-pointer">
+                                    Total Amount {sortColumn === 'total_amount' && <i className={`bi bi-arrow-${sortDirection === 'asc' ? 'down' : 'up'}`}></i>}
+                                </th>
+                                <th onClick={() => handleSort('table_identifier')} className="cursor-pointer">
+                                    Table {sortColumn === 'table_identifier' && <i className={`bi bi-arrow-${sortDirection === 'asc' ? 'down' : 'up'}`}></i>}
+                                </th>
+                                <th>Actions</th>
                             </tr>
-                        ))}
-                    </tbody>
-                </table>
+                        </thead>
+                        <tbody>
+                            {sortedOrders.map(order => (
+                                <tr key={order.order_id}>
+                                    <td>{order.order_id}</td>
+                                    <td>{order.user_name}</td>
+                                    <td>{order.status}</td>
+                                    <td>${order.total_amount}</td>
+                                    <td>{order.table_identifier}</td>
+                                    <td>
+                                        <Link to={`/admin/order/${order.order_id}`} className="btn btn-info btn-sm">View Details</Link>
+                                    </td>
+                                </tr>
+                            ))}
+                        </tbody>
+                    </table>
+                )}
             </div>
+
             {/* Display Total Amount */}
             <div className="mt-4 text-end">
                 <h5>Total Amount of Orders: ${totalAmount.toFixed(2)}</h5>
