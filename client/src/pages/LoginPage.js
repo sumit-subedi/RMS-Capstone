@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { login } from '../api';
-import Cookies from 'js-cookie'; // Import js-cookie
+import Cookies from 'js-cookie'; 
+import logo from '../images/logo.png'; 
 
 const LoginPage = ({ setToken, setRole }) => {
     const [username, setUsername] = useState('');
@@ -37,27 +38,32 @@ const LoginPage = ({ setToken, setRole }) => {
     };
 
     return (
-        <div className="container-fluid bg-dark text-light vh-100 d-flex align-items-center justify-content-center">
-            <div className="card bg-secondary p-5">
-                <h2 className="text-center text-muted mb-4">Login</h2>
+        <div className="login-background container-fluid bg-dark text-light vh-100 d-flex align-items-center justify-content-center">
+            <div className="card bg-secondary p-4 p-md-5 shadow-lg rounded">
+                <div className="text-center mb-4">
+                <img src={logo} alt="Logo" className="mb-3" style={{ maxWidth: '150px' }} />
+                <h2 className="text-light">Login</h2>
+                </div>
                 {error && <p className="text-danger text-center">{error}</p>}
                 <form onSubmit={handleSubmit}>
                     <div className="mb-3">
                         <input
                             type="text"
-                            className="form-control bg-secondary border-light text-light"
+                            className="form-control bg-dark border-light text-light input-form"
                             placeholder="Username"
                             value={username}
                             onChange={(e) => setUsername(e.target.value)}
+                            style={{ color: 'white' }} 
                         />
                     </div>
                     <div className="mb-3">
                         <input
                             type="password"
-                            className="form-control bg-secondary border-light text-light"
+                            className="form-control bg-dark border-light text-light input-form"
                             placeholder="Password"
                             value={password}
                             onChange={(e) => setPassword(e.target.value)}
+                            style={{ color: 'white' }} 
                         />
                     </div>
                     <button type="submit" className="btn btn-primary w-100">Login</button>

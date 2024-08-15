@@ -1,7 +1,7 @@
 // src/api.js
 import axios from 'axios';
 
-const API_URL = 'http://localhost:3000'; 
+const API_URL = 'https://api.sumit-subedi.com.np'; 
 
 // Login API call
 export const login = async (username, password) => {
